@@ -1,0 +1,320 @@
+<?xml version="1.0"?>
+<implementation>
+  <settings>
+    <protocol>crlf</protocol>
+  </settings>
+  <functions>
+    
+	ipaddr = ""
+	ipport = ""
+	
+	luup.variable_set("urn:micasaverde-com:serviceId:Color1", "CurrentColor", 00, lul_device)
+	luup.variable_set("urn:micasaverde-com:serviceId:Color1", "ColorRGBTarget", 00, lul_device)
+	luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SingleFile", 00, lul_device)
+	luup.variable_set("urn:upnp-org:serviceId:Dimming1", "FileSelect", 0, lul_device)
+	luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SpeedTarget", 30, lul_device)
+	luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", 30, lul_device)
+	
+	function getIP(lul_dev)
+        local ip = luup.attr_get("ip", lul_dev)
+		if (ip == nil) or (#ip == 0) or (ip == undefined) then
+			luup.task("DreamColorRGBW: ip address/port not set.(default *youripaddres*:4626")
+		end
+		ipaddr, ipport = string.match(ip,"(%d+%.%d+%.%d+%.%d+)%:?(%d*)")
+	end
+		
+	
+		
+	local function setLevel(lul_dev, newlevel)
+		local cmdlev
+		local llstatus = luup.variable_get("urn:upnp-org:serviceId:Dimming1","LoadLevelStatus",lul_dev)
+		local llev = tonumber(llstatus,10)
+		local level = tonumber(newlevel,10)
+		if level > 100 then level = 100 end
+		if 0 > level then level = 0 end
+		return level
+	end
+	
+	local function setSpeed(lul_dev, newspeed)
+		local cmdspeed
+		local lspeedstatus = luup.variable_get("urn:upnp-org:serviceId:Dimming1","SpeedStatus",lul_dev)
+		local lspeed = tonumber(lspeedstatus,10)
+		local speed = tonumber(newspeed,10)
+		if speed > 100 then speed = 100 end
+		if 0 > speed then speed = 0 end
+		return speed
+	end
+	
+	function DEC_HEX(IN)
+    local B,K,OUT,I,D=16,"0123456789abcdef","",0
+    while IN>0 do
+        I=I+1
+        IN,D=math.floor(IN/B),math.mod(IN,B)+1
+        OUT=string.sub(K,D,D)..OUT
+    end
+    return OUT
+end
+  
+  </functions>
+  <incoming>
+    <lua>
+	
+    </lua>
+  </incoming>
+  <startup>getIP</startup>
+  <actionList>
+    <action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetLoadLevelTarget</name>
+      <job>
+	    if busy then luup.sleep(100) end
+		busy = true
+	    luup.variable_set("urn:upnp-org:serviceId:Dimming1", "LoadLevelTarget", lul_settings.newLoadlevelTarget, lul_device)
+		local level = setLevel(lul_device,lul_settings.newLoadlevelTarget)
+		luup.variable_set("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", level, lul_device)
+		if level == 0 then
+				luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", 0, lul_device)
+				luup.variable_set("urn:upnp-org:serviceId:Dimming1", "IconState", 0, lul_device)
+			else
+				luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", 1, lul_device)
+				luup.variable_set("urn:upnp-org:serviceId:Dimming1", "IconState", level, lul_device)
+			end
+	
+		
+		local DimmerFront = string.char(0xfb,0xc1)
+		local DimmerEnd = string.char(0x00,0x84,0x00,0xec,0x41,0x00,0x08,0xec,0x41,0x00)
+		
+		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
+		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
+		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
+		local DimmerCommandchar = string.char(DimmerCommand2)
+		
+		local SingleFile = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SingleFile", lul_dev)
+		SingleFile = (SingleFile - math.floor(SingleFile/256)*256)
+		local SingleFilechar = string.char(SingleFile)
+		
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		
+		local SpeedCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", lul_dev)
+		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
+		local SpeedCommandchar = string.char(SpeedCommand)
+		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(Dimmer, ipaddr, ipport)
+		luup.sleep(100)
+		s:sendto(Dimmer, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+	    
+	  </job>
+    </action>
+	
+	<action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetSpeedTarget</name>
+      <job>
+	    if busy then luup.sleep(100) end
+		busy = true
+	    luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SpeedTarget", lul_settings.newSpeedTarget, lul_device)
+		local speed = setSpeed(lul_device,lul_settings.newSpeedTarget)
+		luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", speed, lul_device)
+		
+		
+		local SpeedFront = string.char(0xfb,0xc1)
+		local SpeedEnd = string.char(0x00,0x84,0x00,0xec,0x41,0x00,0x08,0xec,0x41,0x00)
+		
+		local SpeedCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", lul_dev)
+		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
+		local SpeedCommandchar = string.char(SpeedCommand)
+		
+		local SingleFile = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SingleFile", lul_dev)
+		SingleFile = (SingleFile - math.floor(SingleFile/256)*256)
+		local SingleFilechar = string.char(SingleFile)
+		
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		
+		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
+		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
+		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
+		local DimmerCommandchar = string.char(DimmerCommand2)
+		local Speed = SpeedFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..SpeedEnd
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(Speed, ipaddr, ipport)
+		luup.sleep(100)
+		s:sendto(Speed, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+	    
+	  </job>
+    </action>
+	
+	<action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetFileSelect</name>
+      <job>
+	    luup.variable_set("urn:upnp-org:serviceId:Dimming1", "FileSelect", lul_settings.newFileSelect, lul_device)
+		
+		local FileSelectFront = string.char(0xfb,0xc5)
+		local FileSelectEnd = string.char(0x08,0xec,0x41,0x00)
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		local FileSelectCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "FileSelect", lul_dev)
+		FileSelectCommand = (FileSelectCommand - math.floor(FileSelectCommand/256)*256)
+		local FileSelectCommandchar = string.char(FileSelectCommand)
+		local FileSelect = FileSelectFront..SessionVariablechar..FileSelectCommandchar..FileSelectEnd
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(FileSelect, ipaddr, ipport)
+		luup.sleep(100)
+		s:sendto(FileSelect, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+	  </job>
+    </action>
+	
+	<action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetSingleFile</name>
+      <job>
+	    
+		local DimmerFront = string.char(0xfb,0xc1)
+		local DimmerEnd = string.char(0x00,0x84,0x00,0xec,0x41,0x00,0x08,0xec,0x41,0x00)
+		
+		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
+		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
+		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
+		local DimmerCommandchar = string.char(DimmerCommand2)
+		
+		local SingleFile = 01
+		local SingleFilechar = string.char(SingleFile)
+		luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SingleFile", 01, lul_device)
+		
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		
+		local SpeedCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", lul_dev)
+		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
+		local SpeedCommandchar = string.char(SpeedCommand)
+		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
+		
+		
+		
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(Dimmer, ipaddr, ipport)
+		luup.sleep(100)
+		s:sendto(Dimmer, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+	  </job>
+    </action>
+	
+	<action>
+      <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+      <name>SetLoopFile</name>
+      <job>
+	    
+		local DimmerFront = string.char(0xfb,0xc1)
+		local DimmerEnd = string.char(0x00,0x84,0x00,0xec,0x41,0x00,0x08,0xec,0x41,0x00)
+		
+		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
+		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
+		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
+		local DimmerCommandchar = string.char(DimmerCommand2)
+		
+		local SingleFile = 00
+		local SingleFilechar = string.char(SingleFile)
+		luup.variable_set("urn:upnp-org:serviceId:Dimming1", "SingleFile", 00, lul_device)
+		
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		
+		local SpeedCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "SpeedStatus", lul_dev)
+		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
+		local SpeedCommandchar = string.char(SpeedCommand)
+		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
+		
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(Dimmer, ipaddr, ipport)
+		luup.sleep(100)
+		s:sendto(Dimmer, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+	  </job>
+    </action>
+	
+	<action>
+      <serviceId>urn:micasaverde-com:serviceId:Color1</serviceId>
+      <name>SetColorRGB</name>
+       <job>
+	    if busy then luup.sleep(100) end
+		busy = true
+	    luup.variable_set("urn:micasaverde-com:serviceId:Color1", "ColorRGBTarget", lul_settings.newColorRGBTarget, lul_device)
+		luup.variable_set("urn:micasaverde-com:serviceId:Color1", "CurrentColor", lul_settings.newColorRGBTarget, lul_device)
+		
+		local setColorfront = string.char(0xfb,0xc2)
+		local setColormiddle = string.char(0x00)
+		local setColorend = string.char(0x08,0xec,0x41,0x00)
+		
+		local SessionVariable = math.random(1,99)
+		SessionVariable1 = (SessionVariable - math.floor(SessionVariable/256)*256)
+		local SessionVariablechar = string.char(SessionVariable1)
+		
+		local color = luup.variable_get("urn:micasaverde-com:serviceId:Color1", "CurrentColor", lul_device)
+		string = color
+		r, g, b = string:match("([^,]+),([^,]+),([^,]+)")
+		
+		local r = math.floor(r/16)
+		local rhe = DEC_HEX(r)
+		local rhex = ( "0x0"..rhe ) 
+		
+		local g = math.floor(g/16)
+		local ghe = DEC_HEX(g)
+		local ghex = ( "0x0"..ghe ) 
+		
+		local b = math.floor(b/16)
+		local bhe = DEC_HEX(b)
+		local bhex = ( "0x0"..bhe ) 
+		
+		local rgbhex = string.char(ghex,rhex,bhex)
+		
+		local setColorcommand = setColorfront..SessionVariablechar..setColormiddle..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..rgbhex..setColorend
+		
+		socket = require("socket")
+		local s = socket.udp()
+		s:sendto(setColorcommand, ipaddr, ipport)
+		uup.sleep(100)
+		s:sendto(setColorcommand, ipaddr, ipport)
+		s:close()
+		luup.sleep(oICT)
+		busy = false
+		return 4,nil
+		
+	   
+	  
+	   </job>
+    </action>
+	  
+	
+  </actionList>
+</implementation>
