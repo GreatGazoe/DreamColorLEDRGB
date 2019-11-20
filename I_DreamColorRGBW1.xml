@@ -25,10 +25,15 @@
     ipaddr = ""
 	ipport = ""
 	busy = false
-    luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", 01, lul_device)
+    luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", "01", lul_device)
 	
 	function getIP(lul_dev)
-        local ip = luup.attr_get("ip", lul_dev)
+        require "socket"
+		local s = socket.udp()
+		s:setpeername("74.125.115.104",80)
+		local ip, _ = s:getsockname()
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "VeraLocalIp", ip, lul_device)
+		local ip = luup.attr_get("ip", lul_dev)
 		ip = string.gsub(ip," ","")
 		ipaddr, ipport = string.match(ip,"(%d+%.%d+%.%d+%.%d+)%:?(%d*)")
 			if (ipport == nil) or (#ipport == 0) or (ipport == undefined) then
@@ -41,7 +46,7 @@
 			return false
 		else 
 			luup.attr_set("ip",ipaddr .. ":" .. ipport,lul_dev)
-			luup.variable_set("urn:micasaverde-com:serviceId:HaDevice1", "CommFailure", 0, lul_dev)
+			luup.variable_set("urn:micasaverde-com:serviceId:HaDevice1", "CommFailure", "0", lul_dev)
 			return true
 		end
 	end
@@ -76,13 +81,13 @@
 		local level = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelTarget", lul_device)
 		luup.variable_set("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", level, lul_device)
 		if level == "0" then
-				luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", 0, lul_device)
-				luup.variable_set("urn:upnp-org:serviceId:Dimming1", "IconState", 0, lul_device)
+				luup.variable_set("urn:upnp-org:serviceId:SwitchPower1", "Status", "0", lul_device)
+				luup.variable_set("urn:upnp-org:serviceId:Dimming1", "IconState", "0", lul_device)
 				local setColorfront = string.char(0xfb,0xc2)
 				local setColormiddle = string.char(0x00)
 				local setColormiddle1 = string.char(0x01)
 				local setColormiddle2 = string.char(0x02)
-				local setColorend = string.char(0x00,0x08,0xec,0x41,0x00)
+				local setColorend = string.char(0x00,0x3b,0x13,0x4c,0x00)
 				local rgbreset = string.char(0x00,0x00,0x00)
 				local rgbreset1 = rgbreset..rgbreset..rgbreset..rgbreset..rgbreset
 				local rgbreset2 = rgbreset1..rgbreset1..rgbreset1..rgbreset1..rgbreset1
@@ -94,7 +99,7 @@
 				local resetColorcommand1 = setColorfront..SessionVariablechar..setColormiddle1..rgbresetchar..setColorend
 				local SessionVariablechar = SessionVariable(SessionVariable)
 				local resetColorcommand2 = setColorfront..SessionVariablechar..setColormiddle2..rgbresetchar..setColorend
-				luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 0, lul_device)
+				luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "0", lul_device)
 				socket = require("socket")
 				local s = socket.udp()
 				s:sendto(resetColorcommand, ipaddr, ipport)
@@ -118,12 +123,12 @@
 		end
 		local ColorRGB = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", lul_device)
 		if ColorRGB == "1" then 
-			luup.call_action("urn:micasaverde-com:serviceId:Color1", "SetColorRGB", CurrentColor, lul_device)
+			luup.call_action("urn:micasaverde-com:serviceId:Color1", "SetColorRGB", {["newColorRGBTarget"] = CurrentColor}, lul_device)
 			busy = false
 			return 4,nil
 		end
 		local DimmerFront = string.char(0xfb,0xc1)
-		local DimmerEnd = string.char(0x00,0xb8,0x0b,0x00,0x00,0x00,0x08,0xec,0x41,0x00)
+		local DimmerEnd = string.char(0x00,0x00,0x03,0x00,0x00,0x00,0x3b,0x13,0x4c,0x00)
 		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
 		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
 		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
@@ -136,7 +141,7 @@
 		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
 		local SpeedCommandchar = string.char(SpeedCommand)
 		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 0, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "0", lul_device)
 		socket = require("socket")
 		local s = socket.udp()
 		s:sendto(Dimmer, ipaddr, ipport)
@@ -180,7 +185,7 @@
 		local speed = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SpeedTarget", lul_device)
 		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SpeedStatus", speed, lul_device)
 		local SpeedFront = string.char(0xfb,0xc1)
-		local SpeedEnd = string.char(0x00,0xb8,0x0b,0x00,0x00,0x00,0x08,0xec,0x41,0x00)
+		local SpeedEnd = string.char(0x00,0x00,0x03,0x00,0x00,0x00,0x3b,0x13,0x4c,0x00)
 		local SpeedCommand = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SpeedStatus", lul_dev)
 		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
 		local SpeedCommandchar = string.char(SpeedCommand)
@@ -193,7 +198,7 @@
 		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
 		local DimmerCommandchar = string.char(DimmerCommand2)
 		local Speed = SpeedFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..SpeedEnd
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 0, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "0", lul_device)
 		socket = require("socket")
 		local s = socket.udp()
 		s:sendto(Speed, ipaddr, ipport)
@@ -214,7 +219,7 @@
 		busy = true
 	    luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "FileSelect", lul_settings.newFileSelect, lul_device)
 		local FileSelectFront = string.char(0xfb,0xc5)
-		local FileSelectEnd = string.char(0x08,0xec,0x41,0x00)
+		local FileSelectEnd = string.char(0x3b,0x13,0x4c,0x00)
 		local SessionVariablechar = SessionVariable(SessionVariable)
 		local FileSelectCommand = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "FileSelect", lul_dev)
 		FileSelectCommand = (FileSelectCommand - math.floor(FileSelectCommand/256)*256)
@@ -240,20 +245,20 @@
 	    if busy then luup.sleep(100) end
 		busy = true
 		local DimmerFront = string.char(0xfb,0xc1)
-		local DimmerEnd = string.char(0x00,0xb8,0x0b,0x00,0x00,0x00,0x08,0xec,0x41,0x00)
+		local DimmerEnd = string.char(0x00,0x00,0x03,0x00,0x00,0x00,0x3b,0x13,0x4c,0x00)
 		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
 		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
 		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
 		local DimmerCommandchar = string.char(DimmerCommand2)
-		local SingleFile = 01
+		local SingleFile = "01"
 		local SingleFilechar = string.char(SingleFile)
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", 01, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", "01", lul_device)
 		local SessionVariablechar = SessionVariable(SessionVariable)
 		local SpeedCommand = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SpeedStatus", lul_dev)
 		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
 		local SpeedCommandchar = string.char(SpeedCommand)
 		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 0, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "0", lul_device)
 		socket = require("socket")
 		local s = socket.udp()
 		s:sendto(Dimmer, ipaddr, ipport)
@@ -273,20 +278,20 @@
 	    if busy then luup.sleep(100) end
 		busy = true
 		local DimmerFront = string.char(0xfb,0xc1)
-		local DimmerEnd = string.char(0x00,0xb8,0x0b,0x00,0x00,0x00,0x08,0xec,0x41,0x00)
+		local DimmerEnd = string.char(0x00,0x00,0x03,0x00,0x00,0x00,0x3b,0x13,0x4c,0x00)
 		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
 		local DimmerCommand1 = math.floor(DimmerCommand / 3.33)
 		DimmerCommand2 = (DimmerCommand1 - math.floor(DimmerCommand1/256)*256)
 		local DimmerCommandchar = string.char(DimmerCommand2)
-		local SingleFile = 00
+		local SingleFile = "00"
 		local SingleFilechar = string.char(SingleFile)
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", 00, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SingleFile", "00", lul_device)
 		local SessionVariablechar = SessionVariable(SessionVariable)
 		local SpeedCommand = luup.variable_get("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "SpeedStatus", lul_dev)
 		SpeedCommand = (SpeedCommand - math.floor(SpeedCommand/256)*256)
 		local SpeedCommandchar = string.char(SpeedCommand)
 		local Dimmer = DimmerFront..SessionVariablechar..SpeedCommandchar..DimmerCommandchar..SingleFilechar..DimmerEnd
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 0, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "0", lul_device)
 		socket = require("socket")
 		local s = socket.udp()
 		s:sendto(Dimmer, ipaddr, ipport)
@@ -311,7 +316,7 @@
 		local setColormiddle = string.char(0x00)
 		local setColormiddle1 = string.char(0x01)
 		local setColormiddle2 = string.char(0x02)
-		local setColorend = string.char(0x00,0x08,0xec,0x41,0x00)
+		local setColorend = string.char(0x00,0x3b,0x13,0x4c,0x00)
 		local DimmerCommand = luup.variable_get("urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus", lul_dev)
 		local DimmerCommand1 = math.floor(DimmerCommand / 6.25)
 		DimmerCommand2 = DEC_HEX(DimmerCommand1)
@@ -359,7 +364,7 @@
 		local resetColorcommand1 = setColorfront..SessionVariablechar..setColormiddle1..rgbresetchar..setColorend
 		local SessionVariablechar = SessionVariable(SessionVariable)
 		local resetColorcommand2 = setColorfront..SessionVariablechar..setColormiddle2..rgbresetchar..setColorend
-		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", 1, lul_device)
+		luup.variable_set("urn:ggfiplupro-com:serviceId:DreamColorRGBW1", "ColorRGB", "1", lul_device)
 		socket = require("socket")
 		local s = socket.udp()
 		s:sendto(resetColorcommand, ipaddr, ipport)

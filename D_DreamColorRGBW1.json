@@ -202,16 +202,6 @@
                     "id": "1",
                     "isSingle": "1",
                     "scenegroup": "1"
-                },
-                {
-                    "id": "2",
-                    "isSingle": "1",
-                    "scenegroup": "1"
-                },
-                {
-                    "id": "3",
-                    "isSingle": "1",
-                    "scenegroup": "1"
                 }
             ],
             "SceneGroup": [
@@ -628,6 +618,17 @@
             "TabType": "javascript",
             "ScriptName": "shared.js",
             "Function": "device_scenes"
+        },
+		{
+            "Label": {
+                "lang_tag": "dreamcolor_options",
+                "text": "DreamColor Options"
+            },
+            "Position": "1",
+            "top_navigation_tab": 1,
+			"TabType": "javascript",
+            "ScriptName": "J_DreamColorRGBW1.js",
+            "Function": "DreamColorRGBWControls"
         }
     ],
     "sceneList": {
