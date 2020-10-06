@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <serviceStateTable>
+        
+     <stateVariable sendEvents="no">
+      <name>SingleFile</name>
+      <dataType>string</dataType>
+      <defaultValue>1</defaultValue>
+      <shortCode>singlefile</shortCode>
+    </stateVariable>
+		
+    <stateVariable sendEvents="no">
+      <name>FileSelect</name>
+      <dataType>string</dataType>
+      <defaultValue>1</defaultValue>
+      <shortCode>fileselect</shortCode>
+    </stateVariable>
+		
+    <stateVariable>
+      <name>SpeedTarget</name>
+      <sendEventsAttribute>no</sendEventsAttribute>
+      <dataType>ui1</dataType>
+      <defaultValue>0</defaultValue>
+      <allowedValueRange>
+        <minimum>0</minimum>
+        <maximum>100</maximum>
+      </allowedValueRange>
+    </stateVariable>
+	
+	<stateVariable>
+      <name>SpeedStatus</name>
+      <sendEventsAttribute>yes</sendEventsAttribute>
+      <dataType>ui1</dataType>
+      <defaultValue>0</defaultValue>
+      <shortCode>level</shortCode>
+      <allowedValueRange>
+        <minimum>0</minimum>
+        <maximum>100</maximum>
+      </allowedValueRange>
+    </stateVariable>
+	
+	<stateVariable sendEvents="no">
+      <name>ColorRGB</name>
+      <dataType>string</dataType>
+      <defaultValue>1</defaultValue>
+      <shortCode>ColorRGB</shortCode>
+    </stateVariable>
+	
+	<stateVariable sendEvents="no">
+      <name>ColorJS</name>
+      <dataType>string</dataType>
+      <defaultValue>155,55,55</defaultValue>
+      <shortCode>ColorJS</shortCode>
+    </stateVariable>
+	
+	
+		
+   </serviceStateTable>
+  
+  <actionList>
+
+    <action>
+      <name>SetLoadLevelTarget</name>
+      <argumentList>
+        <argument>
+          <name>newLoadLevelTarget</name>
+          <direction>in</direction>
+          <relatedStateVariable>LoadLevelStatus</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+
+    <action>
+      <name>SetSpeedTarget</name>
+      <argumentList>
+        <argument>
+          <name>newSpeedTarget</name>
+          <direction>in</direction>
+          <relatedStateVariable>SpeedTarget</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+
+    <action>
+      <name>SetFileSelect</name>
+      <argumentList>
+        <argument>
+          <name>newFileSelect</name>
+          <direction>in</direction>
+          <relatedStateVariable>FileSelect</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+	
+	<action>
+      <name>SetSingleFile</name>
+      <argumentList>
+        <argument>
+          <name>newSingleFile</name>
+          <direction>in</direction>
+          <relatedStateVariable>SingleFile</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+	
+	<action>
+      <name>SetLoopFile</name>
+    </action>
+	
+	<action>
+      <name>SetColorRGB</name>
+      <argumentList>
+        <argument>
+          <name>newColorRGB</name>
+          <direction>in</direction>
+          <relatedStateVariable>ColorRGBTarget</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
+
+    </actionList>
+</scpd>
+ 
