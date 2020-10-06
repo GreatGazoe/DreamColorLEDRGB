@@ -82,7 +82,7 @@ Next  "Apps>Develop apps>Create Device", then type "D_DreamColorRGBW1.xml" at "U
 The next thing is that the plugin asks for Ip-adress, this has to be entered at "Advanced tab" in your new created Device under "Ip".
 The default port from the controller is "4626" so you have to enter "<youripadress>:4626". Next reload Luup and you can start control your strip/grid. If a red warning box is showed ("can't detect device") just reload Luup again and it will disapear.
 
-Looks like every controller has it's own “code-end”. To determine your “code-end” use Wireshark(windows) or PacketSniffer(Android) to capture
+Looks like every controller has it's own “code-end”. If the plugin is not functioning right away try to determine your “code-end” use Wireshark(windows) or PacketSniffer(Android) to capture
 brightness code. The “code-end” are the last 4 number pairs (like: 08 ec 41 00). Use an editor (like Notepad++) to edit I_DreamColorRGBW1.xml.
 Change on top “local CommandCodeEnd” corresponding the code you discovered. 
 
