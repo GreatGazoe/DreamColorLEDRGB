@@ -2,7 +2,7 @@
 Plugin Vera controller (z-wave) for controller ws2812b led strip.
 
 This plugin is made to control the H806SB WiFi controller, this device is made to control individually addressable RGB LED-stips/grids.
-Compatible protocols are :  WS-2811 / WS-2812 /  WS-2812 / DMX512 etc.
+Compatible protocols are :  WS-2811 / WS-2812 /  WS-2812B / DMX512 etc.
 
 The big advantage above normal LED-strips are very nice effects, such as "waterfall" effect or the "knight Rider" effect.
 The controller uses a SD-Card to store .dat effect files, with the plugin you can choose the effect-file (by number) and whether to use
@@ -82,9 +82,7 @@ Next  "Apps>Develop apps>Create Device", then type "D_DreamColorRGBW1.xml" at "U
 The next thing is that the plugin asks for Ip-adress, this has to be entered at "Advanced tab" in your new created Device under "Ip".
 The default port from the controller is "4626" so you have to enter "<youripadress>:4626". Next reload Luup and you can start control your strip/grid. If a red warning box is showed ("can't detect device") just reload Luup again and it will disapear.
 
-Looks like every controller has it's own “code-end”. If the plugin is not functioning right away try to determine your “code-end” use Wireshark(windows) or PacketSniffer(Android) to capture
-brightness code. The “code-end” are the last 4 number pairs (like: 08 ec 41 00). Use an editor (like Notepad++) to edit I_DreamColorRGBW1.xml.
-Change on top “local CommandCodeEnd” corresponding the code you discovered. 
+Looks like every controller has it's own “code-end”. If the plugin is not functioning right away try to determine your “code-end”, use Wireshark(windows) or PacketSniffer(Android) to capture brightness code while using the app (android) who belongs to the controller. The “code-end” are the last 4 number pairs (like: 08 ec 41 00). Use an editor (like Notepad++) to edit I_DreamColorRGBW1.xml. Change on top “local CommandCodeEnd” corresponding the code you discovered. 
 
 It would be nice if we can share .dat effect files, so if you made a nice effect and you think it's worth it ............ !!
 I hope many people will buy the controller and starting to use my plugin, and start to develop .dat effect files, enjoy !!
