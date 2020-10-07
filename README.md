@@ -77,6 +77,7 @@ You need a 5v Power Supply for the strip and for the controller, for a WS2812B L
 The Power Supply can be bought at AliExpress or at your local LED-Store:
 https://www.aliexpress.com/item/1005001512850782.html?spm=a2g0o.productlist.0.0.484cd5b6wQEmOS&algo_pvid=50e0ab74-9841-4ffd-896e-ac7c9c5f4fe0&algo_expid=50e0ab74-9841-4ffd-896e-ac7c9c5f4fe0-0&btsid=0b0a187916020990931471274ec8a5&ws_ab_test=searchweb0_0,searchweb201602_,searchweb201603_
 You still need a power plug and electricity wires to connect the power supply to the controller and to a wallplug.
+
 For manual installing on Vera, just select "Apps>Develop apps>Luup files" and upload all 5 files.
 Next  "Apps>Develop apps>Create Device", then type "D_DreamColorRGBW1.xml" at "Upnp Device Filename" and reload Luup.
 The next thing is that the plugin asks for an Ip-adress, this has to be entered at "Advanced tab" in your new created Device under "Ip".
