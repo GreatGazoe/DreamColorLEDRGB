@@ -10,7 +10,7 @@ single-effect modus or loop-file modus.
 Also speed adjustment (effects) is implemented and the brightness can be controlled to.
 Beside this the LED-controller can be used to control like a normal RGB LED-strip, so the complete (red, blue) color can be selected. Take in mind that only 340 leds are programmed so in case of a LED-strip with 60 leds/meter you can control about 5,5 meter.
 
-The nice thing about the controller is that software can be downloaded on the website from the manufacturer to develop your own .dat effects files. This software is for Windows. The software is very user friendly and gives a ton of possibilities to create your own effects.
+The nice thing about the controller is that software can be downloaded on the website from the manufacturer to develop your own .dat effects files. This software is for Windows (LEDBuild). The software is very user friendly and gives a ton of possibilities to create your own effects.
 
 With this plugin you can control your strip/grid : 
  - In the User Interface from Vera  
@@ -73,16 +73,13 @@ https://www.aliexpress.com/item/led-WiFi-controller-1-port-control-max-2048-pixe
 If you want to control a RGB-Strip (instead of a grid) you can use a WS2812/B LED-strip this can be bought at AliExpress or at your local LED-Store:
 https://www.aliexpress.com/item/5M-30Pixel-M-150-5050-RGB-SMD-WS2811-IC-Built-in-WS2812B-WS2812-white-PCB-Addressable/32367479484.html?spm=2114.search0204.3.180.341ad19dNFh4yi&ws_ab_test=searchweb0_0,searchweb201602_3_10152_10151_10065_10344_10068_10342_10343_10313_10059_10340_10341_10534_100031_10084_10604_10083_10103_10304_10307_10615_10301_10142,searchweb201603_36,ppcSwitch_7_ppcChannel&algo_expid=9a7e0aa4-a73d-44c3-8d1a-c14fbd591e20-20&algo_pvid=9a7e0aa4-a73d-44c3-8d1a-c14fbd591e20&transAbTest=ae803_5&priceBeautifyAB=2
 
-You need a 12v Power Supply for the strip and for the controller, for a WS2812B LED-strip every led consumes 0,06A, so for a 5 meter strip with 60 leds/meter you need 60x5x0,06 = 18 A !!!http://forum.micasaverde.com/Smileys/default/wink.gif
+You need a 5v Power Supply for the strip and for the controller, for a WS2812B LED-strip every led consumes 0,06A, so for a 5 meter strip with 60 leds/meter you need 60x5x0,06 = 18 A !!!
 The Power Supply can be bought at AliExpress or at your local LED-Store:
-https://www.aliexpress.com/item/250w-12v-20a-Single-Output-switching-power-suppy/32270275630.html?spm=2114.search0204.3.2.169a4dd9mmQADh&s=p&ws_ab_test=searchweb0_0,searchweb201602_3_10152_10151_10065_10344_10068_10342_10343_10313_10059_10340_10341_10534_100031_10084_10604_10083_10103_10304_10307_10615_10301_10142,searchweb201603_36,ppcSwitch_7_ppcChannel&transAbTest=ae803_5&priceBeautifyAB=2
+https://www.aliexpress.com/item/1005001512850782.html?spm=a2g0o.productlist.0.0.484cd5b6wQEmOS&algo_pvid=50e0ab74-9841-4ffd-896e-ac7c9c5f4fe0&algo_expid=50e0ab74-9841-4ffd-896e-ac7c9c5f4fe0-0&btsid=0b0a187916020990931471274ec8a5&ws_ab_test=searchweb0_0,searchweb201602_,searchweb201603_
 You still need a power plug and electricity wires to connect the power supply to the controller and to a wallplug.
-The plugin files are in the "DreamColor.zip" file, just select "Apps>Develop apps>Luup files" and upload all 4 files.
+For manual installing on Vera, just select "Apps>Develop apps>Luup files" and upload all 5 files.
 Next  "Apps>Develop apps>Create Device", then type "D_DreamColorRGBW1.xml" at "Upnp Device Filename" and reload Luup.
-The next thing is that the plugin asks for Ip-adress, this has to be entered at "Advanced tab" in your new created Device under "Ip".
+The next thing is that the plugin asks for an Ip-adress, this has to be entered at "Advanced tab" in your new created Device under "Ip".
 The default port from the controller is "4626" so you have to enter "<youripadress>:4626". Next reload Luup and you can start control your strip/grid. If a red warning box is showed ("can't detect device") just reload Luup again and it will disapear.
 
 Looks like every controller has it's own “code-end”. If the plugin is not functioning right away try to determine your “code-end”, use Wireshark(windows) or PacketSniffer(Android) to capture brightness code while using the app (android) who belongs to the controller. The “code-end” are the last 4 number pairs (like: 08 ec 41 00). Use an editor (like Notepad++) to edit I_DreamColorRGBW1.xml. Change on top “local CommandCodeEnd” corresponding the code you discovered. 
-
-It would be nice if we can share .dat effect files, so if you made a nice effect and you think it's worth it ............ !!
-I hope many people will buy the controller and starting to use my plugin, and start to develop .dat effect files, enjoy !!
